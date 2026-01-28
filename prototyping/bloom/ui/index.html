@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>bloom — hearth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+  <!-- Markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Navigation -->
+    <nav class="nav">
+      <div class="nav-brand">
+        <span class="brand-icon">🌸</span>
+        <span class="brand-name">bloom</span>
+        <span class="connection-status" id="connection-status" title="Gateway connection">●</span>
+      </div>
+      <div class="nav-links">
+        <a href="#" class="nav-link active" data-view="chat">chat</a>
+        <a href="#" class="nav-link" data-view="overview">overview</a>
+        <a href="#" class="nav-link" data-view="conversations">conversations</a>
+        <a href="#" class="nav-link" data-view="channels">channels</a>
+        <a href="#" class="nav-link" data-view="household">household</a>
+        <a href="#" class="nav-link" data-view="routines">routines</a>
+        <a href="#" class="nav-link" data-view="skills">skills</a>
+        <a href="#" class="nav-link" data-view="friends">friends</a>
+        <a href="#" class="nav-link" data-view="library">library</a>
+        <a href="#" class="nav-link" data-view="settings">settings</a>
+      </div>
+    </nav>
+
+    <!-- Main content area -->
+    <main class="main">
+      <!-- Chat View (DEFAULT) -->
+      <section id="view-chat" class="view active">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="chat-welcome">
+              <span class="welcome-icon">🌸</span>
+              <h2>Hello!</h2>
+              <p>I'm here to help. What's on your mind?</p>
+            </div>
+          </div>
+          <div class="chat-input-area">
+            <div class="chat-input-wrapper">
+              <textarea 
+                id="chat-input" 
+                placeholder="Type a message..." 
+                rows="1"
+                autofocus
+              ></textarea>
+              <button class="chat-send-btn" id="chat-send" title="Send message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Overview View -->
+      <section id="view-overview" class="view">
+        <header class="view-header">
+          <h1>Welcome Home</h1>
+          <p class="subtitle">Everything at a glance</p>
+        </header>
+        
+        <div class="overview-grid">
+          <!-- Status Card -->
+          <div class="overview-card status-card">
+            <h2>System Health</h2>
+            <div class="status-indicator" id="system-status">
+              <span class="status-dot"></span>
+              <span class="status-text">Connecting...</span>
+            </div>
+            <div class="status-details" id="status-details">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          
+          <!-- Model Card -->
+          <div class="overview-card">
+            <h2>Mind</h2>
+            <div class="model-info" id="model-info">
+              <p class="dim">Loading model information...</p>
+            </div>
+          </div>
+          
+          <!-- Quick Stats Card -->
+          <div class="overview-card">
+            <h2>Activity</h2>
+            <div class="quick-stats" id="quick-stats">
+              <div class="stat-item">
+                <span class="stat-value" id="stat-sessions">-</span>
+                <span class="stat-label">conversations</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="stat-channels">-</span>
+                <span class="stat-label">channels</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value" id="stat-crons">-</span>
+                <span class="stat-label">routines</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Instances Card -->
+          <div class="overview-card wide">
+            <h2>Presence</h2>
+            <div class="instances-list" id="instances-list">
+              <p class="dim">Looking for connected instances...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Conversations View (Sessions) -->
+      <section id="view-conversations" class="view">
+        <header class="view-header">
+          <h1>Conversations</h1>
+          <p class="subtitle">Ongoing dialogues across channels</p>
+        </header>
+        <div class="sessions-container">
+          <div class="sessions-list" id="sessions-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Channels View -->
+      <section id="view-channels" class="view">
+        <header class="view-header">
+          <h1>Channels</h1>
+          <p class="subtitle">Ways to reach out</p>
+        </header>
+        <div class="channels-grid" id="channels-grid">
+          <!-- Populated by JS -->
+        </div>
+        <div class="qr-modal" id="qr-modal">
+          <div class="qr-modal-content">
+            <h2 id="qr-modal-title">Scan to Connect</h2>
+            <div class="qr-container" id="qr-container"></div>
+            <p class="qr-instructions">Open the app on your phone and scan this code</p>
+            <button class="btn btn-subtle" id="qr-close">Close</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Household View (Workers) -->
+      <section id="view-household" class="view">
+        <header class="view-header">
+          <h1>The Household</h1>
+          <p class="subtitle">Workers tending to their tasks</p>
+        </header>
+        <div class="household-actions">
+          <button class="btn btn-warm" id="invite-worker-btn">Invite a Worker</button>
+        </div>
+        <div class="workers-grid" id="workers-grid">
+          <!-- Workers will be populated here -->
+        </div>
+      </section>
+
+      <!-- Routines View (Cron Jobs) -->
+      <section id="view-routines" class="view">
+        <header class="view-header">
+          <h1>Routines</h1>
+          <p class="subtitle">Scheduled rhythms and tasks</p>
+        </header>
+        <div class="routines-actions">
+          <button class="btn btn-warm" id="add-routine-btn">Add Routine</button>
+        </div>
+        <div class="routines-list" id="routines-list">
+          <!-- Populated by JS -->
+        </div>
+        
+        <!-- Add Routine Modal -->
+        <div class="modal" id="routine-modal">
+          <div class="modal-content">
+            <h2>New Routine</h2>
+            <form id="routine-form">
+              <div class="form-group">
+                <label for="routine-name">Name</label>
+                <input type="text" id="routine-name" placeholder="morning-check" required>
+              </div>
+              <div class="form-group">
+                <label for="routine-schedule">Schedule (cron expression)</label>
+                <input type="text" id="routine-schedule" placeholder="0 9 * * *" required>
+                <span class="form-hint">e.g., "0 9 * * *" for 9am daily, "*/30 * * * *" for every 30 min</span>
+              </div>
+              <div class="form-group">
+                <label for="routine-channel">Channel</label>
+                <input type="text" id="routine-channel" placeholder="webchat">
+              </div>
+              <div class="form-group">
+                <label for="routine-message">Message</label>
+                <textarea id="routine-message" rows="4" placeholder="What should I do?" required></textarea>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-subtle" id="routine-cancel">Cancel</button>
+                <button type="submit" class="btn btn-warm">Create</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Skills View -->
+      <section id="view-skills" class="view">
+        <header class="view-header">
+          <h1>Skills</h1>
+          <p class="subtitle">Abilities and capabilities</p>
+        </header>
+        <div class="skills-grid" id="skills-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Friends View (Nodes) -->
+      <section id="view-friends" class="view">
+        <header class="view-header">
+          <h1>Friends</h1>
+          <p class="subtitle">Paired devices nearby</p>
+        </header>
+        <div class="nodes-grid" id="nodes-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Library View -->
+      <section id="view-library" class="view">
+        <header class="view-header">
+          <h1>Library</h1>
+          <p class="subtitle">Collected works and archives</p>
+        </header>
+        <div class="library-container">
+          <nav class="library-breadcrumb" id="library-breadcrumb">
+            <a href="#" data-path="">library</a>
+          </nav>
+          <div class="library-grid" id="library-grid">
+            <!-- Library items will be populated here -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings View (Config + Debug + Logs) -->
+      <section id="view-settings" class="view">
+        <header class="view-header">
+          <h1>Settings</h1>
+          <p class="subtitle">Configuration and diagnostics</p>
+        </header>
+        
+        <div class="settings-tabs">
+          <button class="settings-tab active" data-tab="config">Configuration</button>
+          <button class="settings-tab" data-tab="debug">Debug</button>
+          <button class="settings-tab" data-tab="logs">Logs</button>
+        </div>
+        
+        <div class="settings-content">
+          <!-- Config Tab -->
+          <div class="settings-pane active" id="settings-config">
+            <!-- Gateway Token -->
+            <div class="config-section">
+              <h3>Gateway Connection</h3>
+              <div class="token-config">
+                <div class="form-group">
+                  <label for="gateway-token">Authentication Token</label>
+                  <input type="password" id="gateway-token" placeholder="Enter your gateway token">
+                  <span class="form-hint">Find this in ~/.clawdbot/clawdbot.json → gateway.auth.token</span>
+                </div>
+                <div class="token-actions">
+                  <button class="btn btn-subtle" id="show-token-btn">Show</button>
+                  <button class="btn btn-warm" id="save-token-btn">Save & Reconnect</button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Gateway Config -->
+            <div class="config-section">
+              <h3>Gateway Configuration</h3>
+              <div class="config-viewer">
+                <div class="config-actions">
+                  <button class="btn btn-subtle" id="refresh-config">Refresh</button>
+                </div>
+                <pre class="config-json" id="config-json">Loading configuration...</pre>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Debug Tab -->
+          <div class="settings-pane" id="settings-debug">
+            <div class="debug-actions">
+              <button class="btn btn-subtle" id="snapshot-status">Status Snapshot</button>
+              <button class="btn btn-subtle" id="snapshot-health">Health Snapshot</button>
+              <button class="btn btn-subtle" id="snapshot-models">Models Snapshot</button>
+            </div>
+            <div class="debug-output">
+              <h3>Event Log</h3>
+              <div class="event-log" id="event-log">
+                <p class="dim">Events will appear here...</p>
+              </div>
+            </div>
+            <div class="debug-output">
+              <h3>Snapshot</h3>
+              <pre class="debug-snapshot" id="debug-snapshot">Run a snapshot to see details</pre>
+            </div>
+          </div>
+          
+          <!-- Logs Tab -->
+          <div class="settings-pane" id="settings-logs">
+            <div class="logs-controls">
+              <input type="text" id="logs-filter" placeholder="Filter logs..." class="logs-filter">
+              <label class="logs-autoscroll">
+                <input type="checkbox" id="logs-autoscroll-toggle" checked> Auto-scroll
+              </label>
+              <button class="btn btn-subtle" id="logs-clear">Clear</button>
+            </div>
+            <div class="logs-viewer" id="logs-viewer">
+              <p class="dim">Connecting to log stream...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Worker Detail View (overlay) -->
+      <section id="view-worker-detail" class="view worker-detail-view">
+        <button class="back-btn" id="back-to-household">← Back to household</button>
+        <div class="worker-detail" id="worker-detail">
+          <!-- Worker details will be populated here -->
+        </div>
+      </section>
+
+      <!-- Spawn Worker Modal -->
+      <div class="modal" id="spawn-modal">
+        <div class="modal-content">
+          <h2>Invite a Worker</h2>
+          <p class="subtitle">A new mind, a new purpose</p>
+          <form class="spawn-form" id="spawn-form">
+            <div class="form-group">
+              <label for="spawn-id">Name them</label>
+              <input type="text" id="spawn-id" placeholder="research-alice, draft-letter..." required>
+              <span class="form-hint">A short identifier. Lowercase, with dashes.</span>
+            </div>
+            <div class="form-group">
+              <label for="spawn-role">Their calling</label>
+              <input type="text" id="spawn-role" placeholder="researcher, writer, reviewer..." required>
+              <span class="form-hint">What kind of work are they suited for?</span>
+            </div>
+            <div class="form-group">
+              <label for="spawn-task">The task</label>
+              <textarea id="spawn-task" rows="6" placeholder="Describe what you need. This becomes their purpose." required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-subtle" id="spawn-cancel">Cancel</button>
+              <button type="submit" class="btn btn-warm">Bring them in</button>
+            </div>
+          </form>
+          <div class="spawn-result" id="spawn-result"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

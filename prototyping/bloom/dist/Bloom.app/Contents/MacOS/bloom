@@ -1,0 +1,120 @@
+#!/bin/bash
+# Bloom.app launcher script
+# Starts the bloom gateway and UI, opens browser, and provides menu bar status
+
+set -e
+
+# Fix PATH for macOS app launch (doesn't inherit shell PATH)
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+# Get the directory where Bloom is installed
+BLOOM_DIR="/Users/yeshuagod/un/prototyping/bloom"
+CORE_DIR="$BLOOM_DIR/core"
+UI_DIR="$BLOOM_DIR/ui"
+CONFIG_FILE="$HOME/.clawdbot/clawdbot.json"
+LOG_DIR="$HOME/.bloom/logs"
+PID_FILE="$HOME/.bloom/bloom.pid"
+
+# Create log directory
+mkdir -p "$LOG_DIR"
+mkdir -p "$(dirname "$PID_FILE")"
+
+# Store our PID
+echo $$ > "$PID_FILE"
+
+# Log file paths
+GATEWAY_LOG="$LOG_DIR/gateway.log"
+UI_LOG="$LOG_DIR/ui.log"
+
+# Ports
+GATEWAY_PORT=3377
+UI_PORT=3000
+
+# PIDs for cleanup
+GATEWAY_PID=""
+UI_PID=""
+
+# Cleanup function
+cleanup() {
+    echo "$(date): Shutting down Bloom..." >> "$LOG_DIR/bloom.log"
+    
+    if [ -n "$GATEWAY_PID" ] && kill -0 "$GATEWAY_PID" 2>/dev/null; then
+        kill "$GATEWAY_PID" 2>/dev/null || true
+    fi
+    
+    if [ -n "$UI_PID" ] && kill -0 "$UI_PID" 2>/dev/null; then
+        kill "$UI_PID" 2>/dev/null || true
+    fi
+    
+    # Also kill any child processes
+    pkill -P $$ 2>/dev/null || true
+    
+    rm -f "$PID_FILE"
+    
+    echo "$(date): Bloom stopped." >> "$LOG_DIR/bloom.log"
+    exit 0
+}
+
+# Set up signal handlers
+trap cleanup EXIT INT TERM
+
+echo "$(date): Starting Bloom..." >> "$LOG_DIR/bloom.log"
+
+# Check if gateway is already running
+if lsof -i :$GATEWAY_PORT >/dev/null 2>&1; then
+    echo "$(date): Gateway already running on port $GATEWAY_PORT" >> "$LOG_DIR/bloom.log"
+else
+    # Start the gateway
+    echo "$(date): Starting gateway..." >> "$LOG_DIR/bloom.log"
+    cd "$CORE_DIR"
+    node moltbot.mjs gateway >> "$GATEWAY_LOG" 2>&1 &
+    GATEWAY_PID=$!
+    echo "$(date): Gateway started (PID: $GATEWAY_PID)" >> "$LOG_DIR/bloom.log"
+fi
+
+# Wait for gateway to be ready
+sleep 2
+
+# Check if UI is already running
+if lsof -i :$UI_PORT >/dev/null 2>&1; then
+    echo "$(date): UI already running on port $UI_PORT" >> "$LOG_DIR/bloom.log"
+else
+    # Start the UI
+    echo "$(date): Starting UI..." >> "$LOG_DIR/bloom.log"
+    cd "$UI_DIR"
+    npm run dev >> "$UI_LOG" 2>&1 &
+    UI_PID=$!
+    echo "$(date): UI started (PID: $UI_PID)" >> "$LOG_DIR/bloom.log"
+fi
+
+# Wait for UI to be ready
+sleep 3
+
+# Open browser
+echo "$(date): Opening browser..." >> "$LOG_DIR/bloom.log"
+open "http://localhost:$UI_PORT"
+
+# Display a notification
+osascript -e 'display notification "Bloom is running at http://localhost:3000" with title "🌸 Bloom" sound name "Glass"' 2>/dev/null || true
+
+echo "$(date): Bloom is running." >> "$LOG_DIR/bloom.log"
+
+# Keep the app running - check processes periodically
+while true; do
+    sleep 30
+    
+    # Check if processes are still alive
+    if [ -n "$GATEWAY_PID" ] && ! kill -0 "$GATEWAY_PID" 2>/dev/null; then
+        echo "$(date): Gateway process died, restarting..." >> "$LOG_DIR/bloom.log"
+        cd "$CORE_DIR"
+        node moltbot.mjs gateway >> "$GATEWAY_LOG" 2>&1 &
+        GATEWAY_PID=$!
+    fi
+    
+    if [ -n "$UI_PID" ] && ! kill -0 "$UI_PID" 2>/dev/null; then
+        echo "$(date): UI process died, restarting..." >> "$LOG_DIR/bloom.log"
+        cd "$UI_DIR"
+        npm run dev >> "$UI_LOG" 2>&1 &
+        UI_PID=$!
+    fi
+done

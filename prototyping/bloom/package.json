@@ -1,0 +1,34 @@
+{
+  "name": "bloom",
+  "version": "0.1.0",
+  "description": "Bloom - AI orchestration layer for un, powered by clawdbot/moltbot engine",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.23.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "core",
+    "ui"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter bloom-ui dev",
+    "dev:ui": "pnpm --filter bloom-ui dev",
+    "build": "pnpm -r build",
+    "build:core": "pnpm --filter moltbot build",
+    "build:ui": "pnpm --filter bloom-ui build",
+    "core:gateway": "pnpm --filter moltbot gateway",
+    "core:tui": "pnpm --filter moltbot tui",
+    "install:all": "pnpm install",
+    "upstream:fetch": "cd core && git fetch upstream",
+    "upstream:merge": "cd core && git fetch upstream && git merge upstream/main",
+    "app:icon": "cd core && node scripts/create-bloom-icon.mjs && cd .. && iconutil -c icns dist/icon.iconset -o dist/Bloom.app/Contents/Resources/bloom.icns",
+    "app:install": "bash scripts/install-app.sh",
+    "app:open": "open dist/Bloom.app",
+    "app:stop": "bash scripts/stop-bloom.sh"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
